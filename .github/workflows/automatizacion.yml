@@ -1,0 +1,28 @@
+name: Recopilador Diario de Precios CeX
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Descargar repositorio
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Ejecutar Extractor de Precios
+      run: node extractor.js
+
+    - name: Guardar cambios y subir a GitHub
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add historial.csv
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Actualización diaria de precios" && git push)
