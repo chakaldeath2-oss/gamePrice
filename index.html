@@ -3,13 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>Historial de Precios CeX</title>
-    <!-- Cargamos Chart.js para los gráficos y PapaParse para leer el CSV fácilmente -->
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://cloudflare.com"></script>
+    <!-- Cargamos las librerías necesarias directamente desde servidores rápidos -->
+    <script src="https://jsdelivr.net" defer></script>
+    <script src="https://cloudflare.com" defer></script>
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f4f6f9; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; font-size: 24px; }
+        /* Modo Oscuro Total */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 850px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+            background-color: #121212; 
+            color: #e0e0e0; 
+        }
+        .card { 
+            background: #1e1e1e; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
+            border: 1px solid #2d2d2d;
+        }
+        h1 { 
+            color: #ffffff; 
+            text-align: center; 
+            margin-bottom: 30px; 
+            font-size: 24px; 
+        }
     </style>
 </head>
 <body>
@@ -20,39 +40,49 @@
 </div>
 
 <script>
+// Esta función lee el archivo CSV y extrae las columnas
 async function procesarDatos() {
-    // 1. Descargamos el archivo CSV desde nuestra carpeta
-    const respuesta = await fetch('historial.csv');
-    const textoCSV = await respuesta.text();
+    try {
+        const respuesta = await fetch('historial.csv');
+        if (!respuesta.ok) throw new Error("No se encuentra el archivo CSV");
+        const textoCSV = await respuesta.text();
 
-    // 2. PapaParse convierte el CSV en objetos de JavaScript limpios
-    Papa.parse(textoCSV, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true,
-        complete: function(resultado) {
-            const datos = resultado.data;
-            
-            // Si el archivo está vacío, detenemos la ejecución
-            if(datos.length === 0) return;
+        // Convertimos el texto del CSV en listas que entienda el gráfico
+        Papa.parse(textoCSV, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            complete: function(resultado) {
+                const datos = resultado.data;
+                if(datos.length === 0) return;
 
-            // 3. Agrupamos los datos en listas para el gráfico
-            const fechas = datos.map(fila => fila["Fecha"].split(' ')[0]); // Solo dejamos la fecha (AAAA-MM-DD)
-            const efectivos = datos.map(fila => fila["Precio Efectivo"]);
-            const cupones = datos.map(fila => fila["Precio Cupon"]);
-            const nombreJuego = datos[0]["Juego"];
+                // Extraemos los datos exactos limpiando los textos
+                const fechas = datos.map(fila => fila["Fecha"] ? fila["Fecha"].split(' ')[0] : ""); 
+                const efectivos = datos.map(fila => fila["Precio Efectivo"]);
+                const cupones = datos.map(fila => fila["Precio Cupon"]);
+                
+                // Sacamos el nombre del juego de la primera fila disponible
+                const nombreJuego = datos[0]["Juego"] || "Juego Seleccionado";
 
-            // Actualizamos el título de la web con el nombre real del juego
-            document.getElementById('titulo-juego').innerText = `Historial de Precios: ${nombreJuego}`;
+                // Cambiamos el título superior
+                document.getElementById('titulo-juego').innerText = `Historial: ${nombreJuego}`;
 
-            // 4. Dibujamos el gráfico en pantalla
-            renderizarGrafico(fechas, efectivos, cupones);
-        }
-    });
+                // Dibujamos el gráfico pasándole los datos limpios
+                renderizarGrafico(fechas, efectivos, cupones);
+            }
+        });
+    } catch (e) {
+        document.getElementById('titulo-juego').innerText = "Error: El archivo historial.csv no tiene datos todavía";
+    }
 }
 
+// Esta función dibuja las líneas roja y verde en la pantalla
 function renderizarGrafico(fechas, efectivos, cupones) {
     const ctx = document.getElementById('graficoPrecios').getContext('2d');
+    
+    Chart.defaults.color = '#b3b3b3';
+    Chart.defaults.borderColor = '#2d2d2d';
+
     new Chart(ctx, {
         type: 'line',
         data: {
@@ -61,35 +91,42 @@ function renderizarGrafico(fechas, efectivos, cupones) {
                 {
                     label: 'Dinero en Efectivo (€)',
                     data: efectivos,
-                    borderColor: '#e74c3c', // Rojo
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    fill: false,
-                    tension: 0.2
+                    borderColor: '#ff6b6b', 
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    tension: 0.2,
+                    pointBackgroundColor: '#ff6b6b'
                 },
                 {
                     label: 'Valor en Cupón (€)',
                     data: cupones,
-                    borderColor: '#2ecc71', // Verde
+                    borderColor: '#2ecc71', 
                     backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                    fill: false,
-                    tension: 0.2
+                    tension: 0.2,
+                    pointBackgroundColor: '#2ecc71'
                 }
             ]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: { position: 'top' }
+                legend: { labels: { color: '#ffffff' } }
             },
             scales: {
-                y: { title: { display: true, text: 'Euros (€)' } }
+                x: { grid: { color: '#2d2d2d' } },
+                y: { 
+                    title: { display: true, text: 'Euros (€)', color: '#ffffff' },
+                    grid: { color: '#2d2d2d' } 
+                }
             }
         }
     });
 }
 
-// Iniciamos el proceso
-procesarDatos();
+// Esperamos a que las librerías se carguen completamente antes de activar el sistema
+document.addEventListener('DOMContentLoaded', () => {
+    // Le damos un pequeño respiro de medio segundo para evitar el error de "Papa"
+    setTimeout(procesarDatos, 500);
+});
 </script>
 
 </body>
