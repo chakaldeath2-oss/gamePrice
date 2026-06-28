@@ -46,58 +46,53 @@
 
 <script>
 async function cargarHistorial() {
-    try {
-        const respuesta = await fetch('historial.csv');
-        const texto = await respuesta.text();
+    const respuesta = await fetch('historial.csv');
+    const texto = await respuesta.text();
+    
+    const lineas = texto.split('\n');
+    
+    const fechas = [];
+    const efectivos = [];
+    const cupones = [];
+    let tablaHTML = "";
+    let nombreJuego = "Triangle Strategy";
+
+    for (let i = 1; i < lineas.length; i++) {
+        const linea = lineas[i].trim();
+        if (linea === "") continue;
+
+        const columnas = linea.split(',');
         
-        // Rompemos el archivo CSV línea por línea de forma nativa
-        const lineas = texto.split('\n');
+        // Limpiamos comillas y espacios de forma ultra-segura
+        const fechaRaw = columnas[0].replace(/"/g, '').trim();
+        const fechaLimpia = fechaRaw.split(' ')[0]; // Nos quedamos solo con AAAA-MM-DD
         
-        const fechas = [];
-        const efectivos = [];
-        const cupones = [];
-        let tablaHTML = "";
-        let nombreJuego = "Videojuego";
+        const juego = columnas[1].replace(/"/g, '').trim();
+        const efectivo = parseFloat(columnas[2]);
+        const cupon = parseFloat(columnas[3]);
 
-        // Empezamos en la línea 1 para saltarnos la cabecera (línea 0)
-        for (let i = 1; i < lineas.length; i++) {
-            const linea = lineas[i].trim();
-            if (linea === "") continue; // Si la línea está vacía, la saltamos
+        nombreJuego = juego;
 
-            // Separamos por comas y limpiamos las comillas de los textos
-            const columnas = linea.split(',');
-            const fecha = columnas[0].replace(/"/g, '');
-            const juego = columnas[1].replace(/"/g, '');
-            const efectivo = parseFloat(columnas[2]);
-            const cupon = parseFloat(columnas[3]);
+        fechas.push(fechaLimpia);
+        efectivos.push(efectivo);
+        cupones.push(cupon);
 
-            nombreJuego = juego;
-
-            // 1. Guardamos los datos para el gráfico
-            fechas.push(fecha);
-            efectivos.push(efectivo);
-            cupones.push(cupon);
-
-            // 2. Construimos la fila de la tabla en HTML
-            tablaHTML += `<tr>
-                <td>${fecha}</td>
-                <td>${juego}</td>
-                <td>${efectivo}€</td>
-                <td>${cupon}€</td>
-            </tr>`;
-        }
-
-        // Inyectamos el nombre del juego y las filas en la tabla
-        document.getElementById('titulo').innerText = "Historial: " + nombreJuego;
-        document.getElementById('cuerpoTabla').innerHTML = tablaHTML;
-
-        // Dibujamos el gráfico de líneas
-        dibujarGrafico(fechas, efectivos, cupones);
-
-    } catch (error) {
-        document.getElementById('titulo').innerText = "Error leyendo el archivo csv local";
+        tablaHTML += `<tr>
+            <td>${fechaLimpia}</td>
+            <td>${juego}</td>
+            <td>${efectivo}€</td>
+            <td>${cupon}€</td>
+        </tr>`;
     }
+
+    // Cambiamos el título y rellenamos la tabla
+    document.getElementById('titulo').innerText = "Historial: " + nombreJuego;
+    document.getElementById('cuerpoTabla').innerHTML = tablaHTML;
+
+    // Dibujamos el gráfico
+    dibujarGrafico(fechas, efectivos, cupones);
 }
+
 
 function dibujarGrafico(fechas, efectivos, cupones) {
     const ctx = document.getElementById('miGrafico').getContext('2d');
