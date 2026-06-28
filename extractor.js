@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const PRODUCT_ID = "045496429393";
-// Cambiamos a la URL de consulta directa regional
 const API_URL = `https://webuy.io{PRODUCT_ID}`;
 const FILE_PATH = path.join(__dirname, 'historial.csv');
 
@@ -10,15 +9,22 @@ async function obtenerPrecios() {
     try {
         console.log("Iniciando conexión segura con CeX...");
         
+        // Configuramos la petición emulando las propiedades exactas de conexión de red de un navegador moderno
         const respuesta = await fetch(API_URL, {
             method: 'GET',
+            mode: 'cors',
+            credentials: 'omit',
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'es-ES,es;q=0.9',
-                'Origin': 'https://es.webuy.com',
-                'Referer': 'https://es.webuy.com/',
-                'Cache-Control': 'no-cache'
+                'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+                'Origin': 'https://webuy.com',
+                'Referer': 'https://webuy.com/',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'cross-site',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
             }
         });
 
@@ -33,7 +39,7 @@ async function obtenerPrecios() {
         const precioEfectivo = box.cashPrice || 0.0;
         const precioCupon = box.exchangePrice || 0.0;
         
-        // Formato de fecha estándar Año-Mes-Día para JavaScript
+        // Capturamos la fecha actual en formato AAAA-MM-DD
         const fecha = new Date().toISOString().split('T')[0];
         const nuevaLinea = `"${fecha}","${nombre}",${precioEfectivo},${precioCupon}\n`;
 
