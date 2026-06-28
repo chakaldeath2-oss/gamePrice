@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Historial de Precios CeX</title>
-    <!-- Cargamos las librerías necesarias directamente desde servidores rápidos -->
     <script src="https://jsdelivr.net" defer></script>
     <script src="https://cloudflare.com" defer></script>
     
     <style>
-        /* Modo Oscuro Total */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             max-width: 850px; 
@@ -40,43 +38,46 @@
 </div>
 
 <script>
-// Esta función lee el archivo CSV y extrae las columnas
 async function procesarDatos() {
     try {
         const respuesta = await fetch('historial.csv');
         if (!respuesta.ok) throw new Error("No se encuentra el archivo CSV");
         const textoCSV = await respuesta.text();
 
-        // Convertimos el texto del CSV en listas que entienda el gráfico
         Papa.parse(textoCSV, {
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
             complete: function(resultado) {
                 const datos = resultado.data;
-                if(datos.length === 0) return;
+                if(!datos || datos.length === 0) {
+                    document.getElementById('titulo-juego').innerText = "El archivo CSV no contiene filas de datos";
+                    return;
+                }
 
-                // Extraemos los datos exactos limpiando los textos
-                const fechas = datos.map(fila => fila["Fecha"] ? fila["Fecha"].split(' ')[0] : ""); 
-                const efectivos = datos.map(fila => fila["Precio Efectivo"]);
-                const cupones = datos.map(fila => fila["Precio Cupon"]);
+                // Extraemos las fechas de forma segura lleven o no hora integrada
+                const fechas = datos.map(fila => {
+                    if (!fila["Fecha"]) return "Sin Fecha";
+                    const textoFecha = String(fila["Fecha"]);
+                    return textoFecha.includes(' ') ? textoFecha.split(' ')[0] : textoFecha.split('T')[0];
+                }); 
+
+                const efectivos = datos.map(fila => fila["Precio Efectivo"] || 0);
+                const cupones = datos.map(fila => fila["Precio Cupon"] || 0);
                 
-                // Sacamos el nombre del juego de la primera fila disponible
-                const nombreJuego = datos[0]["Juego"] || "Juego Seleccionado";
+                // Buscamos el nombre del juego de la primera fila válida
+                const nombreJuego = datos[0]["Juego"] || "Triangle Strategy";
 
-                // Cambiamos el título superior
                 document.getElementById('titulo-juego').innerText = `Historial: ${nombreJuego}`;
 
-                // Dibujamos el gráfico pasándole los datos limpios
                 renderizarGrafico(fechas, efectivos, cupones);
             }
         });
     } catch (e) {
-        document.getElementById('titulo-juego').innerText = "Error: El archivo historial.csv no tiene datos todavía";
+        document.getElementById('titulo-juego').innerText = "Error al procesar las columnas del historial";
     }
 }
 
-// Esta función dibuja las líneas roja y verde en la pantalla
 function renderizarGrafico(fechas, efectivos, cupones) {
     const ctx = document.getElementById('graficoPrecios').getContext('2d');
     
@@ -122,9 +123,7 @@ function renderizarGrafico(fechas, efectivos, cupones) {
     });
 }
 
-// Esperamos a que las librerías se carguen completamente antes de activar el sistema
 document.addEventListener('DOMContentLoaded', () => {
-    // Le damos un pequeño respiro de medio segundo para evitar el error de "Papa"
     setTimeout(procesarDatos, 500);
 });
 </script>
