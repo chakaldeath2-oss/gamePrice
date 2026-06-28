@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Historial de Precios</title>
-    <!-- Solo cargamos Chart.js para el dibujo del gráfico -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Cambiamos a un servidor alternativo super rápido para evitar el bloqueo -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body { 
             font-family: sans-serif; max-width: 800px; margin: 30px auto; padding: 20px; 
@@ -12,8 +12,6 @@
         }
         .container { background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #2d2d2d; }
         h1 { text-align: center; color: #fff; }
-        
-        /* Estilos básicos para la tabla */
         table { width: 100%; border-collapse: collapse; margin-top: 30px; background: #1a1a1a; }
         th, td { padding: 12px; text-align: center; border: 1px solid #2d2d2d; }
         th { background-color: #2c3e50; color: white; }
@@ -23,7 +21,7 @@
 <body>
 
 <div class="container">
-    <h1 id="titulo">Historial de Precios</h1>
+    <h1 id="titulo">Historial: Triangle Strategy</h1>
     
     <!-- ÁREA 1: El Gráfico -->
     <canvas id="miGrafico" width="400" height="180"></canvas>
@@ -39,65 +37,61 @@
             </tr>
         </thead>
         <tbody id="cuerpoTabla">
-            <!-- JavaScript meterá las filas aquí dentro -->
+            <!-- Los datos se inyectan directamente aquí -->
         </tbody>
     </table>
 </div>
 
 <script>
 async function cargarHistorial() {
-    const respuesta = await fetch('historial.csv');
-    const texto = await respuesta.text();
-    
-    const lineas = texto.split('\n');
-    
-    const fechas = [];
-    const efectivos = [];
-    const cupones = [];
-    let tablaHTML = "";
-    let nombreJuego = "Triangle Strategy";
-
-    for (let i = 1; i < lineas.length; i++) {
-        const linea = lineas[i].trim();
-        if (linea === "") continue;
-
-        const columnas = linea.split(',');
+    try {
+        const respuesta = await fetch('historial.csv');
+        const texto = await respuesta.text();
+        const lineas = texto.split('\n');
         
-        // Limpiamos comillas y espacios de forma ultra-segura
-        const fechaRaw = columnas[0].replace(/"/g, '').trim();
-        const fechaLimpia = fechaRaw.split(' ')[0]; // Nos quedamos solo con AAAA-MM-DD
-        
-        const juego = columnas[1].replace(/"/g, '').trim();
-        const efectivo = parseFloat(columnas[2]);
-        const cupon = parseFloat(columnas[3]);
+        const fechas = [];
+        const efectivos = [];
+        const cupones = [];
+        let tablaHTML = "";
 
-        nombreJuego = juego;
+        for (let i = 1; i < lineas.length; i++) {
+            const linea = lineas[i].trim();
+            if (linea === "") continue;
 
-        fechas.push(fechaLimpia);
-        efectivos.push(efectivo);
-        cupones.push(cupon);
+            const columnas = linea.split(',');
+            
+            // Limpiamos los textos quitando comillas
+            const fechaLimpia = columnas[0].replace(/"/g, '').trim();
+            const juegoLimpia = columnas[1].replace(/"/g, '').trim();
+            const efectivo = parseFloat(columnas[2]);
+            const cupon = parseFloat(columnas[3]);
 
-        tablaHTML += `<tr>
-            <td>${fechaLimpia}</td>
-            <td>${juego}</td>
-            <td>${efectivo}€</td>
-            <td>${cupon}€</td>
-        </tr>`;
+            fechas.push(fechaLimpia.split(' ')[0]); // Nos quedamos solo con la fecha corta
+            efectivos.push(efectivo);
+            cupones.push(cupon);
+
+            tablaHTML += `<tr>
+                <td>${fechaLimpia}</td>
+                <td>${juegoLimpia}</td>
+                <td>${efectivo}€</td>
+                <td>${cupon}€</td>
+            </tr>`;
+        }
+
+        document.getElementById('cuerpoTabla').innerHTML = tablaHTML;
+
+        // Intentamos dibujar el gráfico solo si la librería se ha descargado correctamente
+        if (typeof Chart !== 'undefined') {
+            dibujarGrafico(fechas, efectivos, cupones);
+        }
+    } catch (error) {
+        console.error("Error al procesar el CSV:", error);
     }
-
-    // Cambiamos el título y rellenamos la tabla
-    document.getElementById('titulo').innerText = "Historial: " + nombreJuego;
-    document.getElementById('cuerpoTabla').innerHTML = tablaHTML;
-
-    // Dibujamos el gráfico
-    dibujarGrafico(fechas, efectivos, cupones);
 }
-
 
 function dibujarGrafico(fechas, efectivos, cupones) {
     const ctx = document.getElementById('miGrafico').getContext('2d');
     
-    // Colores para el modo oscuro
     Chart.defaults.color = '#b3b3b3';
     Chart.defaults.borderColor = '#2d2d2d';
 
@@ -124,7 +118,7 @@ function dibujarGrafico(fechas, efectivos, cupones) {
     });
 }
 
-// Arrancamos el proceso al cargar la web
+// Arrancamos de forma nativa al cargar la ventana
 window.onload = cargarHistorial;
 </script>
 
