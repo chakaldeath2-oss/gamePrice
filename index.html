@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Precios CeX</title>
+    <!-- Cargamos Chart.js para los gráficos y PapaParse para leer el CSV fácilmente -->
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 850px; margin: 40px auto; padding: 0 20px; background-color: #f4f6f9; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1 id="titulo-juego">Cargando historial de precios...</h1>
+    <canvas id="graficoPrecios" width="400" height="200"></canvas>
+</div>
+
+<script>
+async function procesarDatos() {
+    // 1. Descargamos el archivo CSV desde nuestra carpeta
+    const respuesta = await fetch('historial.csv');
+    const textoCSV = await respuesta.text();
+
+    // 2. PapaParse convierte el CSV en objetos de JavaScript limpios
+    Papa.parse(textoCSV, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: function(resultado) {
+            const datos = resultado.data;
+            
+            // Si el archivo está vacío, detenemos la ejecución
+            if(datos.length === 0) return;
+
+            // 3. Agrupamos los datos en listas para el gráfico
+            const fechas = datos.map(fila => fila["Fecha"].split(' ')[0]); // Solo dejamos la fecha (AAAA-MM-DD)
+            const efectivos = datos.map(fila => fila["Precio Efectivo"]);
+            const cupones = datos.map(fila => fila["Precio Cupon"]);
+            const nombreJuego = datos[0]["Juego"];
+
+            // Actualizamos el título de la web con el nombre real del juego
+            document.getElementById('titulo-juego').innerText = `Historial de Precios: ${nombreJuego}`;
+
+            // 4. Dibujamos el gráfico en pantalla
+            renderizarGrafico(fechas, efectivos, cupones);
+        }
+    });
+}
+
+function renderizarGrafico(fechas, efectivos, cupones) {
+    const ctx = document.getElementById('graficoPrecios').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: fechas,
+            datasets: [
+                {
+                    label: 'Dinero en Efectivo (€)',
+                    data: efectivos,
+                    borderColor: '#e74c3c', // Rojo
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'Valor en Cupón (€)',
+                    data: cupones,
+                    borderColor: '#2ecc71', // Verde
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    fill: false,
+                    tension: 0.2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: { title: { display: true, text: 'Euros (€)' } }
+            }
+        }
+    });
+}
+
+// Iniciamos el proceso
+procesarDatos();
+</script>
+
+</body>
+</html>
