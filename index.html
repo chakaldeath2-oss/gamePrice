@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Historial de Precios</title>
-    <!-- Servidor oficial alternativo rápido para Chart.js -->
-    <script src="chart.js"></script>
+    <!-- Cargamos la librería desde un servidor global alternativo infalible -->
+    <script src="https://unpkg.com"></script>
     <style>
         body { 
             font-family: sans-serif; max-width: 800px; margin: 30px auto; padding: 20px; 
@@ -24,7 +24,7 @@
     <h1 id="titulo">Historial: Triangle Strategy</h1>
     
     <!-- ÁREA 1: El Gráfico -->
-    <div style="position: relative; height:250px; width:100%">
+    <div style="position: relative; height:260px; width:100%; margin-bottom: 20px;">
         <canvas id="miGrafico"></canvas>
     </div>
     
@@ -61,21 +61,20 @@ async function cargarHistorial() {
             if (linea === "") continue;
 
             const columnas = linea.split(',');
-            if (columnas.length < 4) continue; // Saltamos líneas incompletas
+            if (columnas.length < 4) continue; 
             
-            // Limpieza absoluta de comillas y espacios
+            // Limpiamos comillas y espacios de los textos
             const fechaLimpia = columnas[0].replace(/"/g, '').trim();
             const juegoLimpia = columnas[1].replace(/"/g, '').trim();
             
-            // Conversión ultra-segura de números: quitamos comillas y aseguramos punto decimal
-            const efectivoTexto = columnas[2].replace(/"/g, '').trim();
-            const cuponTexto = columnas[3].replace(/"/g, '').trim();
-            
-            const efectivo = parseFloat(efectivoTexto);
-            const cupon = parseFloat(cuponTexto);
+            // Limpiamos y convertimos los números asegurando que entiendan el punto decimal
+            const efectivo = parseFloat(columnas[2].replace(/"/g, '').trim());
+            const cupon = parseFloat(columnas[3].replace(/"/g, '').trim());
 
-            // Guardamos los textos limpios para los ejes del gráfico
-            etiquetasFechas.push(fechaLimpia.split(' ')[0]); // Extrae solo AAAA-MM-DD
+            // Si la fecha tiene hora (ej: "2026-06-26 12:00:00"), nos quedamos solo con "2026-06-26"
+            const fechaCorta = fechaLimpia.includes(' ') ? fechaLimpia.split(' ')[0] : fechaLimpia;
+
+            etiquetasFechas.push(fechaCorta);
             datosEfectivo.push(efectivo);
             datosCupon.push(cupon);
 
@@ -89,21 +88,21 @@ async function cargarHistorial() {
 
         document.getElementById('cuerpoTabla').innerHTML = tablaHTML;
 
-        // Forzamos el renderizado si la librería Chart está disponible
+        // Si la nueva librería se ha descargado bien, dibujamos el gráfico
         if (typeof Chart !== 'undefined') {
             dibujarGrafico(etiquetasFechas, datosEfectivo, datosCupon);
         } else {
-            console.error("La librería Chart.js no se ha detectado en el navegador.");
+            console.error("No se pudo cargar la librería gráfica desde el servidor alternativo.");
         }
     } catch (error) {
-        console.error("Error crítico procesando el CSV:", error);
+        console.error("Error procesando el archivo CSV:", error);
     }
 }
 
 function dibujarGrafico(fechas, efectivos, cupones) {
     const ctx = document.getElementById('miGrafico').getContext('2d');
     
-    // Forzamos los estilos visuales nocturnos para Chart.js
+    // Configuramos los colores claros para las letras en el modo oscuro
     Chart.defaults.color = '#b3b3b3';
     Chart.defaults.borderColor = '#2d2d2d';
 
@@ -144,7 +143,7 @@ function dibujarGrafico(fechas, efectivos, cupones) {
     });
 }
 
-// Inicialización directa
+// Arrancamos el proceso automáticamente
 window.onload = cargarHistorial;
 </script>
 
