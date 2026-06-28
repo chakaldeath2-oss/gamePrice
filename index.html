@@ -2,85 +2,107 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Historial de Precios CeX</title>
-    <script src="https://jsdelivr.net" defer></script>
-    <script src="https://cloudflare.com" defer></script>
-    
+    <title>Historial de Precios</title>
+    <!-- Solo cargamos Chart.js para el dibujo del gráfico -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            max-width: 850px; 
-            margin: 40px auto; 
-            padding: 0 20px; 
-            background-color: #121212; 
-            color: #e0e0e0; 
+            font-family: sans-serif; max-width: 800px; margin: 30px auto; padding: 20px; 
+            background-color: #121212; color: #e0e0e0; 
         }
-        .card { 
-            background: #1e1e1e; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
-            border: 1px solid #2d2d2d;
-        }
-        h1 { 
-            color: #ffffff; 
-            text-align: center; 
-            margin-bottom: 30px; 
-            font-size: 24px; 
-        }
+        .container { background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #2d2d2d; }
+        h1 { text-align: center; color: #fff; }
+        
+        /* Estilos básicos para la tabla */
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; background: #1a1a1a; }
+        th, td { padding: 12px; text-align: center; border: 1px solid #2d2d2d; }
+        th { background-color: #2c3e50; color: white; }
+        tr:nth-child(even) { background-color: #222; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h1 id="titulo-juego">Cargando historial de precios...</h1>
-    <canvas id="graficoPrecios" width="400" height="200"></canvas>
+<div class="container">
+    <h1 id="titulo">Historial de Precios</h1>
+    
+    <!-- ÁREA 1: El Gráfico -->
+    <canvas id="miGrafico" width="400" height="180"></canvas>
+    
+    <!-- ÁREA 2: La Tabla -->
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Juego</th>
+                <th>Efectivo</th>
+                <th>Cupón</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla">
+            <!-- JavaScript meterá las filas aquí dentro -->
+        </tbody>
+    </table>
 </div>
 
 <script>
-async function procesarDatos() {
+async function cargarHistorial() {
     try {
         const respuesta = await fetch('historial.csv');
-        if (!respuesta.ok) throw new Error("No se encuentra el archivo CSV");
-        const textoCSV = await respuesta.text();
+        const texto = await respuesta.text();
+        
+        // Rompemos el archivo CSV línea por línea de forma nativa
+        const lineas = texto.split('\n');
+        
+        const fechas = [];
+        const efectivos = [];
+        const cupones = [];
+        let tablaHTML = "";
+        let nombreJuego = "Videojuego";
 
-        Papa.parse(textoCSV, {
-            header: true,
-            dynamicTyping: true,
-            skipEmptyLines: true,
-            complete: function(resultado) {
-                const datos = resultado.data;
-                if(!datos || datos.length === 0) {
-                    document.getElementById('titulo-juego').innerText = "El archivo CSV no contiene filas de datos";
-                    return;
-                }
+        // Empezamos en la línea 1 para saltarnos la cabecera (línea 0)
+        for (let i = 1; i < lineas.length; i++) {
+            const linea = lineas[i].trim();
+            if (linea === "") continue; // Si la línea está vacía, la saltamos
 
-                // Extraemos las fechas de forma segura lleven o no hora integrada
-                const fechas = datos.map(fila => {
-                    if (!fila["Fecha"]) return "Sin Fecha";
-                    const textoFecha = String(fila["Fecha"]);
-                    return textoFecha.includes(' ') ? textoFecha.split(' ')[0] : textoFecha.split('T')[0];
-                }); 
+            // Separamos por comas y limpiamos las comillas de los textos
+            const columnas = linea.split(',');
+            const fecha = columnas[0].replace(/"/g, '');
+            const juego = columnas[1].replace(/"/g, '');
+            const efectivo = parseFloat(columnas[2]);
+            const cupon = parseFloat(columnas[3]);
 
-                const efectivos = datos.map(fila => fila["Precio Efectivo"] || 0);
-                const cupones = datos.map(fila => fila["Precio Cupon"] || 0);
-                
-                // Buscamos el nombre del juego de la primera fila válida
-                const nombreJuego = datos[0]["Juego"] || "Triangle Strategy";
+            nombreJuego = juego;
 
-                document.getElementById('titulo-juego').innerText = `Historial: ${nombreJuego}`;
+            // 1. Guardamos los datos para el gráfico
+            fechas.push(fecha);
+            efectivos.push(efectivo);
+            cupones.push(cupon);
 
-                renderizarGrafico(fechas, efectivos, cupones);
-            }
-        });
-    } catch (e) {
-        document.getElementById('titulo-juego').innerText = "Error al procesar las columnas del historial";
+            // 2. Construimos la fila de la tabla en HTML
+            tablaHTML += `<tr>
+                <td>${fecha}</td>
+                <td>${juego}</td>
+                <td>${efectivo}€</td>
+                <td>${cupon}€</td>
+            </tr>`;
+        }
+
+        // Inyectamos el nombre del juego y las filas en la tabla
+        document.getElementById('titulo').innerText = "Historial: " + nombreJuego;
+        document.getElementById('cuerpoTabla').innerHTML = tablaHTML;
+
+        // Dibujamos el gráfico de líneas
+        dibujarGrafico(fechas, efectivos, cupones);
+
+    } catch (error) {
+        document.getElementById('titulo').innerText = "Error leyendo el archivo csv local";
     }
 }
 
-function renderizarGrafico(fechas, efectivos, cupones) {
-    const ctx = document.getElementById('graficoPrecios').getContext('2d');
+function dibujarGrafico(fechas, efectivos, cupones) {
+    const ctx = document.getElementById('miGrafico').getContext('2d');
     
+    // Colores para el modo oscuro
     Chart.defaults.color = '#b3b3b3';
     Chart.defaults.borderColor = '#2d2d2d';
 
@@ -90,42 +112,25 @@ function renderizarGrafico(fechas, efectivos, cupones) {
             labels: fechas,
             datasets: [
                 {
-                    label: 'Dinero en Efectivo (€)',
+                    label: 'Efectivo (€)',
                     data: efectivos,
-                    borderColor: '#ff6b6b', 
-                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
-                    tension: 0.2,
-                    pointBackgroundColor: '#ff6b6b'
+                    borderColor: '#ff6b6b',
+                    tension: 0.1
                 },
                 {
-                    label: 'Valor en Cupón (€)',
+                    label: 'Cupón (€)',
                     data: cupones,
-                    borderColor: '#2ecc71', 
-                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                    tension: 0.2,
-                    pointBackgroundColor: '#2ecc71'
+                    borderColor: '#2ecc71',
+                    tension: 0.1
                 }
             ]
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { labels: { color: '#ffffff' } }
-            },
-            scales: {
-                x: { grid: { color: '#2d2d2d' } },
-                y: { 
-                    title: { display: true, text: 'Euros (€)', color: '#ffffff' },
-                    grid: { color: '#2d2d2d' } 
-                }
-            }
-        }
+        options: { responsive: true }
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(procesarDatos, 500);
-});
+// Arrancamos el proceso al cargar la web
+window.onload = cargarHistorial;
 </script>
 
 </body>
