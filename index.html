@@ -67,7 +67,6 @@
         <div><span class="cuadrito" style="background:#2ecc71"></span>Vale / Cupón (€)</div>
     </div>
 
-    <!-- 📊 CONTENEDORES DE LOS 3 DISEÑOS -->
     <h2>OPCIÓN 1: Columnas Verticales Clásicas</h2>
     <div class="grafico-vertical" id="disenoVertical"></div>
 
@@ -108,11 +107,13 @@ async function iniciarPanel() {
             const linea = lineas[i].trim();
             if (linea === "") continue;
 
-            const columnas = linea.split(',');
+            // Separamos limpiando comillas dobles primero para evitar errores
+            const limpia = linea.replace(/"/g, '');
+            const columnas = limpia.split(',');
             if (columnas.length < 4) continue;
 
-            const fecha = columnas[0].replace(/"/g, '').trim();
-            const juego = columnas[1].replace(/"/g, '').trim();
+            const fecha = columnas[0].trim();
+            const juego = columnas[1].trim();
             const efectivo = parseFloat(columnas[2]);
             const cupon = parseFloat(columnas[3]);
 
@@ -132,7 +133,7 @@ async function iniciarPanel() {
         });
 
         if (nombresJuegos.length > 0) {
-            renderizarTodo(nombresJuegos[0]);
+            renderizarTodo(nombresJuegos[0]); // Seleccionamos el primer juego indexado
         }
 
     } catch (error) {
@@ -143,6 +144,7 @@ async function iniciarPanel() {
 
 function renderizarTodo(nombreJuego) {
     const registros = todosLosJuegos[nombreJuego];
+    if (!registros) return;
     
     let maxPrecio = 30; 
     registros.forEach(r => {
@@ -223,4 +225,3 @@ function renderizarTodo(nombreJuego) {
     });
 
     if(totalPuntos > 0) {
-        svg.innerHTML += `<polyline points="${puntosEfectivo.join(' ')}" fill="none" stroke="#ff6b6b" stroke-width="3" stroke-linecap="round"/>`;
