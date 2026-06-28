@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Historial de Precios</title>
-    <!-- Cambiamos a un servidor alternativo super rápido para evitar el bloqueo -->
+    <!-- Servidor oficial alternativo rápido para Chart.js -->
     <script src="https://cloudflare.com"></script>
     <style>
         body { 
@@ -24,7 +24,9 @@
     <h1 id="titulo">Historial: Triangle Strategy</h1>
     
     <!-- ÁREA 1: El Gráfico -->
-    <canvas id="miGrafico" width="400" height="180"></canvas>
+    <div style="position: relative; height:250px; width:100%">
+        <canvas id="miGrafico"></canvas>
+    </div>
     
     <!-- ÁREA 2: La Tabla -->
     <table>
@@ -37,7 +39,7 @@
             </tr>
         </thead>
         <tbody id="cuerpoTabla">
-            <!-- Los datos se inyectan directamente aquí -->
+            <!-- Los datos se inyectan aquí -->
         </tbody>
     </table>
 </div>
@@ -49,9 +51,9 @@ async function cargarHistorial() {
         const texto = await respuesta.text();
         const lineas = texto.split('\n');
         
-        const fechas = [];
-        const efectivos = [];
-        const cupones = [];
+        const etiquetasFechas = [];
+        const datosEfectivo = [];
+        const datosCupon = [];
         let tablaHTML = "";
 
         for (let i = 1; i < lineas.length; i++) {
@@ -59,16 +61,23 @@ async function cargarHistorial() {
             if (linea === "") continue;
 
             const columnas = linea.split(',');
+            if (columnas.length < 4) continue; // Saltamos líneas incompletas
             
-            // Limpiamos los textos quitando comillas
+            // Limpieza absoluta de comillas y espacios
             const fechaLimpia = columnas[0].replace(/"/g, '').trim();
             const juegoLimpia = columnas[1].replace(/"/g, '').trim();
-            const efectivo = parseFloat(columnas[2]);
-            const cupon = parseFloat(columnas[3]);
+            
+            // Conversión ultra-segura de números: quitamos comillas y aseguramos punto decimal
+            const efectivoTexto = columnas[2].replace(/"/g, '').trim();
+            const cuponTexto = columnas[3].replace(/"/g, '').trim();
+            
+            const efectivo = parseFloat(efectivoTexto);
+            const cupon = parseFloat(cuponTexto);
 
-            fechas.push(fechaLimpia.split(' ')[0]); // Nos quedamos solo con la fecha corta
-            efectivos.push(efectivo);
-            cupones.push(cupon);
+            // Guardamos los textos limpios para los ejes del gráfico
+            etiquetasFechas.push(fechaLimpia.split(' ')[0]); // Extrae solo AAAA-MM-DD
+            datosEfectivo.push(efectivo);
+            datosCupon.push(cupon);
 
             tablaHTML += `<tr>
                 <td>${fechaLimpia}</td>
@@ -80,18 +89,21 @@ async function cargarHistorial() {
 
         document.getElementById('cuerpoTabla').innerHTML = tablaHTML;
 
-        // Intentamos dibujar el gráfico solo si la librería se ha descargado correctamente
+        // Forzamos el renderizado si la librería Chart está disponible
         if (typeof Chart !== 'undefined') {
-            dibujarGrafico(fechas, efectivos, cupones);
+            dibujarGrafico(etiquetasFechas, datosEfectivo, datosCupon);
+        } else {
+            console.error("La librería Chart.js no se ha detectado en el navegador.");
         }
     } catch (error) {
-        console.error("Error al procesar el CSV:", error);
+        console.error("Error crítico procesando el CSV:", error);
     }
 }
 
 function dibujarGrafico(fechas, efectivos, cupones) {
     const ctx = document.getElementById('miGrafico').getContext('2d');
     
+    // Forzamos los estilos visuales nocturnos para Chart.js
     Chart.defaults.color = '#b3b3b3';
     Chart.defaults.borderColor = '#2d2d2d';
 
@@ -104,21 +116,35 @@ function dibujarGrafico(fechas, efectivos, cupones) {
                     label: 'Efectivo (€)',
                     data: efectivos,
                     borderColor: '#ff6b6b',
-                    tension: 0.1
+                    backgroundColor: '#ff6b6b',
+                    tension: 0.2,
+                    fill: false
                 },
                 {
                     label: 'Cupón (€)',
                     data: cupones,
                     borderColor: '#2ecc71',
-                    tension: 0.1
+                    backgroundColor: '#2ecc71',
+                    tension: 0.2,
+                    fill: false
                 }
             ]
         },
-        options: { responsive: true }
+        options: { 
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) { return value + '€'; }
+                    }
+                }
+            }
+        }
     });
 }
 
-// Arrancamos de forma nativa al cargar la ventana
+// Inicialización directa
 window.onload = cargarHistorial;
 </script>
 
