@@ -1,7 +1,3 @@
-¡Por supuesto! Es la mejor forma de decidir. He unificado los tres diseños en la misma página web para que puedas verlos funcionar a la vez con tus datos reales.
-He utilizado código nativo puro (HTML, CSS y SVG), lo que significa que la web se cargará al instante y seguirá siendo completamente inmune a cualquier bloqueo de red.
-Abre tu archivo index.html en GitHub, dale al botón del lápiz para editarlo, borra todo lo que tenga dentro y pega este código completo: [1] 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -22,35 +18,29 @@ Abre tu archivo index.html en GitHub, dale al botón del lápiz para editarlo, b
         .leyenda { display: flex; justify-content: center; gap: 20px; font-size: 14px; margin-bottom: 10px; }
         .cuadrito { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 3px; }
 
-        /* ==========================================
-           ESTILOS OPCIÓN 1: Columnas Verticales
-           ========================================== */
+        /* OPCIÓN 1: Columnas Verticales */
         .grafico-vertical { 
             background: #151515; border: 1px solid #2d2d2d; border-radius: 8px;
             display: flex; justify-content: space-around; align-items: flex-end; 
-            height: 220px; padding: 20px; box-sizing: border-box;
+            height: 220px; padding: 20px; box-sizing: border-box; gap: 10px;
         }
         .columna-dia { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .par-barras { display: flex; align-items: flex-end; gap: 6px; height: 140px; }
-        .v-barra { width: 16px; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: bold; }
+        .v-barra { width: 22px; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; font-weight: bold; }
         .v-efectivo { background: #ff6b6b; }
         .v-cupon { background: #2ecc71; }
         .v-fecha { font-size: 11px; color: #888; }
 
-        /* ==========================================
-           ESTILOS OPCIÓN 2: Líneas de Progreso Minimalistas
-           ========================================== */
+        /* OPCIÓN 2: Líneas de Progreso */
         .grafico-progreso { background: #151515; border: 1px solid #2d2d2d; border-radius: 8px; padding: 20px; }
-        .fila-progreso { display: flex; align-items: center; margin: 20px 0; }
-        .progreso-fecha { width: 100px; font-size: 13px; color: #b3b3b3; }
+        .fila-progreso { display: flex; align-items: center; margin: 25px 0; }
+        .progreso-fecha { width: 130px; font-size: 13px; color: #b3b3b3; }
         .progreso-pista { flex-grow: 1; position: relative; height: 6px; background: #2a2a2a; border-radius: 3px; }
-        .progreso-punto { position: absolute; top: -8px; width: 45px; height: 22px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: white; transform: translateX(-50%); }
-        .p-efectivo { background: #ff6b6b; box-shadow: 0 0 8px rgba(255,107,107,0.4); }
-        .p-cupon { background: #2ecc71; box-shadow: 0 0 8px rgba(46,204,113,0.4); top: -35px; } /* Desplazado arriba para no chocar */
+        .progreso-punto { position: absolute; width: 45px; height: 22px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: white; transform: translateX(-50%); }
+        .p-efectivo { background: #ff6b6b; box-shadow: 0 0 8px rgba(255,107,107,0.4); top: -8px; }
+        .p-cupon { background: #2ecc71; box-shadow: 0 0 8px rgba(46,204,113,0.4); top: -35px; } 
 
-        /* ==========================================
-           ESTILOS OPCIÓN 3: Gráfico de Líneas SVG
-           ========================================== */
+        /* OPCIÓN 3: Gráfico SVG */
         .grafico-svg-contenedor { background: #151515; border: 1px solid #2d2d2d; border-radius: 8px; padding: 15px; position: relative; }
         .eje-y { position: absolute; left: 15px; top: 15px; bottom: 40px; display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; color: #666; }
         .fechas-svg { display: flex; justify-content: space-between; padding-left: 40px; padding-right: 20px; margin-top: 5px; font-size: 11px; color: #888; }
@@ -77,8 +67,7 @@ Abre tu archivo index.html en GitHub, dale al botón del lápiz para editarlo, b
         <div><span class="cuadrito" style="background:#2ecc71"></span>Vale / Cupón (€)</div>
     </div>
 
-    <!-- 📊 REPOSITORIO DE LOS 3 DISEÑOS -->
-    
+    <!-- 📊 CONTENEDORES DE LOS 3 DISEÑOS -->
     <h2>OPCIÓN 1: Columnas Verticales Clásicas</h2>
     <div class="grafico-vertical" id="disenoVertical"></div>
 
@@ -88,10 +77,7 @@ Abre tu archivo index.html en GitHub, dale al botón del lápiz para editarlo, b
     <h2>OPCIÓN 3: Gráfico de Líneas Digitales (Vectores SVG)</h2>
     <div class="grafico-svg-contenedor">
         <div class="eje-y"><span id="max-val">50€</span><span id="mid-val">25€</span><span>0€</span></div>
-        <!-- Dibujo vectorial nativo -->
-        <svg id="svgLineas" viewBox="0 0 600 180" style="width:100%; height:180px; padding-left: 40px; box-sizing: border-box;">
-            <!-- Las líneas y puntos se calcularán matemáticamente en JS -->
-        </svg>
+        <svg id="svgLineas" viewBox="0 0 600 180" style="width:100%; height:180px; padding-left: 40px; box-sizing: border-box;"></svg>
         <div class="fechas-svg" id="svgFechas"></div>
     </div>
     
@@ -145,23 +131,25 @@ async function iniciarPanel() {
             selector.appendChild(opcion);
         });
 
-        if (nombresJuegos.length > 0) renderizarTodo(nombresJuegos[0]);
+        if (nombresJuegos.length > 0) {
+            renderizarTodo(nombresJuegos[0]);
+        }
 
     } catch (error) {
         document.getElementById('titulo-principal').innerText = "Error cargando el archivo historial.csv";
+        console.error(error);
     }
 }
 
 function renderizarTodo(nombreJuego) {
     const registros = todosLosJuegos[nombreJuego];
     
-    // 0. Encontrar el precio máximo para escalar los gráficos correctamente
-    let maxPrecio = 30; // Mínimo de escala por defecto
+    let maxPrecio = 30; 
     registros.forEach(r => {
         if (r.efectivo > maxPrecio) maxPrecio = r.efectivo;
         if (r.cupon > maxPrecio) maxPrecio = r.cupon;
     });
-    maxPrecio = Math.ceil(maxPrecio + 5); // Le damos un margen superior
+    maxPrecio = Math.ceil(maxPrecio + 5); 
     document.getElementById('max-val').innerText = maxPrecio + "€";
     document.getElementById('mid-val').innerText = Math.ceil(maxPrecio/2) + "€";
 
@@ -177,7 +165,7 @@ function renderizarTodo(nombreJuego) {
     registros.forEach(r => {
         const hEfectivo = (r.efectivo / maxPrecio) * 140; 
         const hCupon = (r.cupon / maxPrecio) * 140;
-        const fechaCorta = r.fecha.includes(' ') ? r.fecha.split(' ')[0].substring(5) : r.fecha.substring(5); // Solo MM-DD
+        const fechaCorta = r.fecha.includes(' ') ? r.fecha.split(' ')[0] : r.fecha;
 
         verticalHTML += `
         <div class="columna-dia">
@@ -190,7 +178,7 @@ function renderizarTodo(nombreJuego) {
     });
     document.getElementById('disenoVertical').innerHTML = verticalHTML;
 
-    // 3. OPCIÓN 2: Líneas de Progreso Minimalistas
+    // 3. OPCIÓN 2: Líneas de Progreso
     let progresoHTML = "";
     registros.forEach(r => {
         const pEfectivo = (r.efectivo / maxPrecio) * 100;
@@ -207,14 +195,14 @@ function renderizarTodo(nombreJuego) {
     });
     document.getElementById('disenoProgreso').innerHTML = progresoHTML;
 
-    // 4. OPCIÓN 3: Gráfico de Líneas Continuas SVG
+    // 4. OPCIÓN 3: Gráfico de Líneas SVG
     const svg = document.getElementById('svgLineas');
     const svgFechas = document.getElementById('svgFechas');
     svg.innerHTML = "";
     svgFechas.innerHTML = "";
 
-    const anchoTotal = 540;
-    const altoTotal = 150; // Margen para que no toque el techo
+    const anchoTotal = 520;
+    const altoTotal = 140; 
     const totalPuntos = registros.length;
     const separacion = totalPuntos > 1 ? anchoTotal / (totalPuntos - 1) : anchoTotal;
 
@@ -222,44 +210,17 @@ function renderizarTodo(nombreJuego) {
     let puntosCupon = [];
     let fechasHTML = "";
 
+    registros.forEach((r, index) => {
+        const x = index * separacion;
+        const yEfectivo = altoTotal - ((r.efectivo / maxPrecio) * altoTotal) + 20;
+        const yCupon = altoTotal - ((r.cupon / maxPrecio) * altoTotal) + 20;
 
-registros.forEach((r, index) => {
-const x = index * separacion;
-// En SVG el eje Y empieza arriba (0 es el techo), así que invertimos el cálculo
-const yEfectivo = altoTotal - ((r.efectivo / maxPrecio) * altoTotal) + 15;
-const yCupon = altoTotal - ((r.cupon / maxPrecio) * altoTotal) + 15;
-puntosEfectivo.push(${x},${yEfectivo});
-puntosCupon.push(${x},${yCupon});
-// Añadimos círculos en los nodos
-svg.innerHTML += <circle cx="${x}" cy="${yEfectivo}" r="4" fill="#ff6b6b" />;
-svg.innerHTML += <circle cx="${x}" cy="${yCupon}" r="4" fill="#2ecc71" />;
-const fechaCorta = r.fecha.includes(' ') ? r.fecha.split(' ')[0].substring(5) : r.fecha.substring(5);
-fechasHTML += <div>${fechaCorta}</div>;
-});
-// Inyectamos las líneas vectoriales continuas
-if(totalPuntos > 0) {
-svg.innerHTML += <polyline points="${puntosEfectivo.join(' ')}" fill="none" stroke="#ff6b6b" stroke-width="3" stroke-linecap="round"/>;
-svg.innerHTML += <polyline points="${puntosCupon.join(' ')}" fill="none" stroke="#2ecc71" stroke-width="3" stroke-linecap="round"/>;
-}
-svgFechas.innerHTML = fechasHTML;
-}
-function cambiarJuego() {
-renderTodo(document.getElementById('selectorJuego').value);
-}
-window.onload = iniciarPanel;
+        puntosEfectivo.push(`${x},${yEfectivo}`);
+        puntosCupon.push(`${x},${yCupon}`);
 
+        const fechaCorta = r.fecha.includes(' ') ? r.fecha.split(' ')[0] : r.fecha;
+        fechasHTML += `<div>${fechaCorta}</div>`;
+    });
 
-Guarda los cambios abajo del todo dándole al botón verde de **Commit changes** (dos veces). 
-
----
-
-### 👀 ¿Cómo decidir?
-Cuando abras tu enlace web, verás los tres gráficos renderizados uno debajo de otro cargando tus datos del CSV. Puedes compararlos directamente en la misma pantalla:
-1. El **primero** te dará una visión clásica en bloque.
-2. El **segundo** te dará una vista de barra deslizante muy limpia.
-3. El **tercero** emulará las líneas continuas financieras tradicionales.
-
-¿Cuál de los tres te convence más para dejarlo como el único y definitivo en tu web?
-
-
-[1] [https://www.tiktok.com](https://www.tiktok.com/@cesarmartinez_passonti/video/7650286746910903573)
+    if(totalPuntos > 0) {
+        svg.innerHTML += `<polyline points="${puntosEfectivo.join(' ')}" fill="none" stroke="#ff6b6b" stroke-width="3" stroke-linecap="round"/>`;
