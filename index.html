@@ -107,7 +107,6 @@ async function iniciarPanel() {
             const linea = lineas[i].trim();
             if (linea === "") continue;
 
-            // Separamos limpiando comillas dobles primero para evitar errores
             const limpia = linea.replace(/"/g, '');
             const columnas = limpia.split(',');
             if (columnas.length < 4) continue;
@@ -133,7 +132,7 @@ async function iniciarPanel() {
         });
 
         if (nombresJuegos.length > 0) {
-            renderizarTodo(nombresJuegos[0]); // Seleccionamos el primer juego indexado
+            renderizarTodo(nombresJuegos[0]);
         }
 
     } catch (error) {
@@ -225,3 +224,4 @@ function renderizarTodo(nombreJuego) {
     });
 
     if(totalPuntos > 0) {
+        svg.innerHTML += `<polyline points="${puntosEfectivo.join(' ')}" fill="none" stroke="#ff6b6b" stroke-width="3" stroke-linecap="round"/>`;
